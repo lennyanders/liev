@@ -68,7 +68,7 @@ define(['exports'], function (exports) { 'use strict';
    * @param {Object} options
    * @param {Boolean} [options.once=false] whether a listener should only be executed once or not
    * @param {HTMLElement} [options.element=document.documentElement] the parent element to that the listener is attached
-   * @returns {Boolean} 'true' if removed, 'false' if done nothing
+   * @returns {Boolean} `true` if removed, `false` if done nothing
    */
 
   var off = function off(type, selector, callback) {
@@ -134,7 +134,7 @@ define(['exports'], function (exports) { 'use strict';
    * @param {Object} options
    * @param {Boolean} [options.once=false] whether a listener should only be executed once or not
    * @param {HTMLElement} [options.element=document.documentElement] the parent element to that the listener is attached
-   * @returns {Boolean} 'true' if added, 'false' if done nothing
+   * @returns {Boolean} `true` if added, `false` if done nothing
    */
 
 

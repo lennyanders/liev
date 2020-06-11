@@ -54,7 +54,7 @@ Adds a listener
   - `options.once` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** whether a listener should only be executed once or not (optional, default `false`)
   - `options.element` **[HTMLElement](https://developer.mozilla.org/docs/Web/HTML/Element)** the parent element to that the listener is attached (optional, default `document.documentElement`)
 
-Returns **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** 'true' if added, 'false' if done nothing
+Returns **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** `true` if added, `false` if done nothing
 
 ### off
 
@@ -69,7 +69,7 @@ Removes a listener that was added through the "on" method
   - `options.once` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** whether a listener should only be executed once or not (optional, default `false`)
   - `options.element` **[HTMLElement](https://developer.mozilla.org/docs/Web/HTML/Element)** the parent element to that the listener is attached (optional, default `document.documentElement`)
 
-Returns **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** 'true' if removed, 'false' if done nothing
+Returns **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** `true` if removed, `false` if done nothing
 
 ### emit
 
