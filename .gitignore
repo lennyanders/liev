@@ -1,0 +1,5 @@
+node_modules
+
+# files for local testing
+/index.html
+/main.js
