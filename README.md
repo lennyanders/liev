@@ -4,7 +4,7 @@
 
 ## Why should I use Liev?
 
-- Liev attaches events internally to a parent element ('document.documentElement' per default), so you don't need to attach new event listeners when new 'HTMLElements''s get added to the DOM.
+- Liev attaches events internally to a parent element (`document.documentElement` per default), so you don't need to attach new event listeners when new `HTMLElements`'s get added to the DOM.
 - Liev attaches as little event listeners as possible by using event delegation to make your web app more performant ([You can read about that idea here](https://gomakethings.com/why-event-delegation-is-a-better-way-to-listen-for-events-in-vanilla-js/)).
 
 ## Installation
