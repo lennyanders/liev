@@ -56,16 +56,44 @@ var isFunction = function isFunction(variable) {
 var isElement = function isElement(variable) {
   return variable instanceof HTMLElement;
 };
+var getPassive = function getPassive(passive, callback) {
+  return passive === undefined ? !callback.toString().includes('.preventDefault()') : passive;
+};
+var supportsPassive = false;
+
+try {
+  var opts = Object.defineProperty({}, 'passive', {
+    get: function get() {
+      supportsPassive = true;
+    }
+  });
+  window.addEventListener('testPassive', null, opts);
+  window.removeEventListener('testPassive', null, opts);
+} catch (e) {}
+/*
+ * structure of callbacks:
+ *
+ * callbacks: {
+ *   [element]: {
+ *     [eventType]: {
+ *       [passive]: [event][] // passive: true || false
+ *     }
+ *   }
+ * }
+ */
+
+
 var callbacks = new WeakMap();
 
 /**
  * Removes a listener that was added through the "on" method
- * @param {String} type A case-sensitive string representing the event [type](https://developer.mozilla.org/en-US/docs/Web/Events) to listen for
- * @param {String} selector A string containing one or more selectors to match, use an empty string to match everything
- * @param {EventHandler} callback A function that gets executed when an event of the specified type occurs
+ * @param {String} type The type that was used on the "on" method
+ * @param {String} selector The selector that was used on the "on" method
+ * @param {EventHandler} callback The function that was used on the "on" method
  * @param {Object} options
- * @param {Boolean} [options.once=false] whether a listener should only be executed once or not
- * @param {HTMLElement} [options.element=document.documentElement] the parent element to that the listener is attached
+ * @param {Boolean} [options.once=false] The value that was used on the "on" method
+ * @param {HTMLElement} [options.element=document.documentElement] The element that was used on the "on" method
+ * @param {Boolean} [options.passive] The value that was used on the "on" method
  * @returns {Boolean} `true` if removed, `false` if done nothing
  */
 
@@ -73,56 +101,70 @@ var off = function off(type, selector, callback) {
   var _ref = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {},
       once = _ref.once,
       _ref$element = _ref.element,
-      element = _ref$element === void 0 ? document.documentElement : _ref$element;
+      element = _ref$element === void 0 ? document.documentElement : _ref$element,
+      passive = _ref.passive;
 
   if (!isString(type) || !isString(selector) || !isFunction(callback) || !isElement(element)) {
     console.warn("couldn't detach listener.");
     return false;
   }
 
+  var passiveListener = getPassive(passive, callback);
   var eventsOnElement = callbacks.get(element);
   if (!eventsOnElement) return false;
-  var eventsOnElementOfType = eventsOnElement[type];
-  if (!eventsOnElementOfType) return false;
-  var eventIndex = eventsOnElementOfType.findIndex(function (event) {
+  var eventsOnElementType = eventsOnElement[type];
+  if (!eventsOnElementType) return false;
+  var eventsOnElementTypePassive = eventsOnElementType[passiveListener];
+  if (!eventsOnElementTypePassive) return false;
+  var eventIndex = eventsOnElementTypePassive.findIndex(function (event) {
     return event.selector === selector && event.callback === callback && event.once === once;
   });
   if (eventIndex === -1) return false;
 
-  if (eventsOnElementOfType.length === 1) {
-    element.removeEventListener(type, eventsOnElementOfType.handler);
-    delete eventsOnElement[type];
+  if (eventsOnElementTypePassive.length === 1) {
+    element.removeEventListener(type, eventsOnElementTypePassive.handler, {
+      passive: passiveListener
+    });
+    delete eventsOnElementType[passiveListener];
     return true;
   }
 
-  eventsOnElementOfType.splice(eventIndex, 1);
+  eventsOnElementTypePassive.splice(eventIndex, 1);
   return true;
 };
 
-var createEventHandler = function createEventHandler(element, type) {
+var createEventHandler = function createEventHandler(element, type, passive) {
   return function (event) {
-    callbacks.get(element)[type].forEach(function (_ref) {
+    callbacks.get(element)[type][passive].forEach(function (_ref) {
       var selector = _ref.selector,
           callback = _ref.callback,
           once = _ref.once;
       var target = selector ? event.target.closest(selector) : event.target;
       if (!target) return;
+
+      if (passive && (!supportsPassive || event.defaultPrevented)) {
+        event.preventDefault = function () {};
+      }
+
       callback(target, event);
 
       if (once) {
         off(type, selector, callback, {
           once: once,
-          element: element
+          element: element,
+          passive: passive
         });
       }
     });
   };
 };
 
-var addListener = function addListener(element, type) {
-  var handler = createEventHandler(element, type);
-  callbacks.get(element)[type].handler = handler;
-  element.addEventListener(type, handler);
+var addListener = function addListener(element, type, passive) {
+  var handler = createEventHandler(element, type, passive);
+  callbacks.get(element)[type][passive].handler = handler;
+  element.addEventListener(type, handler, {
+    passive: passive
+  });
 };
 /**
  * Adds a listener
@@ -132,6 +174,7 @@ var addListener = function addListener(element, type) {
  * @param {Object} options
  * @param {Boolean} [options.once=false] whether a listener should only be executed once or not
  * @param {HTMLElement} [options.element=document.documentElement] the parent element to that the listener is attached
+ * @param {Boolean} [options.passive] Whether a listener should be passive or not, looks per default into a stringified version of your callback to decide based on your code if it should be passive or not
  * @returns {Boolean} `true` if added, `false` if done nothing
  */
 
@@ -140,12 +183,15 @@ var on = function on(type, selector, callback) {
   var _ref2 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {},
       once = _ref2.once,
       _ref2$element = _ref2.element,
-      element = _ref2$element === void 0 ? document.documentElement : _ref2$element;
+      element = _ref2$element === void 0 ? document.documentElement : _ref2$element,
+      passive = _ref2.passive;
 
   if (!isString(type) || !isString(selector) || !isFunction(callback) || !isElement(element)) {
     console.warn("couldn't attach listener.");
     return false;
   }
+
+  var passiveListener = getPassive(passive, callback);
 
   var event = _objectSpread2({
     selector: selector,
@@ -157,20 +203,28 @@ var on = function on(type, selector, callback) {
   var eventsOnElement = callbacks.get(element);
 
   if (!eventsOnElement) {
-    callbacks.set(element, _defineProperty({}, type, [event]));
-    addListener(element, type);
+    callbacks.set(element, _defineProperty({}, type, _defineProperty({}, passiveListener, [event])));
+    addListener(element, type, passiveListener);
     return true;
   }
 
-  var eventsOnElementOfType = eventsOnElement[type];
+  var eventsOnElementType = eventsOnElement[type];
 
-  if (!eventsOnElementOfType) {
-    eventsOnElement[type] = [event];
-    addListener(element, type);
+  if (!eventsOnElementType) {
+    eventsOnElement[type] = _defineProperty({}, passiveListener, [event]);
+    addListener(element, type, passiveListener);
     return true;
   }
 
-  eventsOnElementOfType.push(event);
+  var eventsOnElementTypePassive = eventsOnElementType[passiveListener];
+
+  if (!eventsOnElementTypePassive) {
+    eventsOnElementType[passiveListener] = [event];
+    addListener(element, type, passiveListener);
+    return true;
+  }
+
+  eventsOnElementTypePassive.push(event);
   return true;
 };
 

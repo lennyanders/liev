@@ -1,23 +1,36 @@
-import { isString, isFunction, isElement, callbacks } from './shared.js';
+import {
+  isString,
+  isFunction,
+  isElement,
+  callbacks,
+  getPassive,
+  supportsPassive,
+} from './shared.js';
 import { off } from './off.js';
 
-const createEventHandler = (element, type) => (event) => {
-  callbacks.get(element)[type].forEach(({ selector, callback, once }) => {
-    const target = selector ? event.target.closest(selector) : event.target;
-    if (!target) return;
+const createEventHandler = (element, type, passive) => (event) => {
+  callbacks
+    .get(element)
+    [type][passive].forEach(({ selector, callback, once }) => {
+      const target = selector ? event.target.closest(selector) : event.target;
+      if (!target) return;
 
-    callback(target, event);
+      if (passive && (!supportsPassive || event.defaultPrevented)) {
+        event.preventDefault = () => {};
+      }
 
-    if (once) {
-      off(type, selector, callback, { once, element });
-    }
-  });
+      callback(target, event);
+
+      if (once) {
+        off(type, selector, callback, { once, element, passive });
+      }
+    });
 };
 
-const addListener = (element, type) => {
-  const handler = createEventHandler(element, type);
-  callbacks.get(element)[type].handler = handler;
-  element.addEventListener(type, handler);
+const addListener = (element, type, passive) => {
+  const handler = createEventHandler(element, type, passive);
+  callbacks.get(element)[type][passive].handler = handler;
+  element.addEventListener(type, handler, { passive });
 };
 
 /**
@@ -28,13 +41,14 @@ const addListener = (element, type) => {
  * @param {Object} options
  * @param {Boolean} [options.once=false] whether a listener should only be executed once or not
  * @param {HTMLElement} [options.element=document.documentElement] the parent element to that the listener is attached
+ * @param {Boolean} [options.passive] Whether a listener should be passive or not, looks per default into a stringified version of your callback to decide based on your code if it should be passive or not
  * @returns {Boolean} `true` if added, `false` if done nothing
  */
 export const on = (
   type,
   selector,
   callback,
-  { once, element = document.documentElement } = {},
+  { once, element = document.documentElement, passive } = {},
 ) => {
   if (
     !isString(type) ||
@@ -46,6 +60,8 @@ export const on = (
     return false;
   }
 
+  const passiveListener = getPassive(passive, callback);
+
   const event = {
     selector,
     callback,
@@ -54,18 +70,25 @@ export const on = (
 
   const eventsOnElement = callbacks.get(element);
   if (!eventsOnElement) {
-    callbacks.set(element, { [type]: [event] });
-    addListener(element, type);
+    callbacks.set(element, { [type]: { [passiveListener]: [event] } });
+    addListener(element, type, passiveListener);
     return true;
   }
 
-  const eventsOnElementOfType = eventsOnElement[type];
-  if (!eventsOnElementOfType) {
-    eventsOnElement[type] = [event];
-    addListener(element, type);
+  const eventsOnElementType = eventsOnElement[type];
+  if (!eventsOnElementType) {
+    eventsOnElement[type] = { [passiveListener]: [event] };
+    addListener(element, type, passiveListener);
     return true;
   }
 
-  eventsOnElementOfType.push(event);
+  const eventsOnElementTypePassive = eventsOnElementType[passiveListener];
+  if (!eventsOnElementTypePassive) {
+    eventsOnElementType[passiveListener] = [event];
+    addListener(element, type, passiveListener);
+    return true;
+  }
+
+  eventsOnElementTypePassive.push(event);
   return true;
 };
