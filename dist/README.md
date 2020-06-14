@@ -8,7 +8,7 @@
 
   > are the [es5](https://en.wikipedia.org/wiki/ECMAScript#5th_Edition) version of the file that has the exact same name, except that `.es5` is missing.
 
-  These exports are usable in IE 11, and other older Browsers, only a polyfill for [CustomEvent](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent#Polyfill) is needed.
+  These exports are usable in IE 11, and other older Browsers, in IE 11 polyfills for `String.prototype.includes`, `CustomEvent()` (only for emit), `Element.prototype.matches`, `Element.prototype.closest` and `Array.prototype.findIndex` are needed.
 
 - Files with `.amd` in it:
 
