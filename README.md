@@ -52,6 +52,7 @@ Adds a listener
 - `selector` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** A string containing one or more selectors to match, use an empty string to match everything
 - `callback` **[EventHandler](#eventhandler)** A function that gets executed when an event of the specified type occurs
 - `options` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** (optional, default `{}`)
+
   - `options.once` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** whether a listener should only be executed once or not (optional, default `false`)
   - `options.element` **[HTMLElement](https://developer.mozilla.org/docs/Web/HTML/Element)** the parent element to that the listener is attached (optional, default `document.documentElement`)
   - `options.passive` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** Whether a listener should be passive or not, looks per default into a stringified version of your callback to decide based on your code if it should be passive or not
@@ -68,6 +69,7 @@ Removes a listener that was added through the "on" method
 - `selector` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** The selector that was used on the "on" method
 - `callback` **[EventHandler](#eventhandler)** The function that was used on the "on" method
 - `options` **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** (optional, default `{}`)
+
   - `options.once` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)** The value that was used on the "on" method (optional, default `false`)
   - `options.element` **[HTMLElement](https://developer.mozilla.org/docs/Web/HTML/Element)** The element that was used on the "on" method (optional, default `document.documentElement`)
   - `options.passive` **[Boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)?** The value that was used on the "on" method
