@@ -235,8 +235,6 @@ var liev = (function (exports) {
   exports.off = off;
   exports.on = on;
 
-  Object.defineProperty(exports, '__esModule', { value: true });
-
   return exports;
 
 })({});

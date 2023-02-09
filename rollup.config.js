@@ -1,12 +1,12 @@
 import { resolve, join } from 'path';
-import { ensureDir, readdir, remove } from 'fs-extra';
-import { terser } from 'rollup-plugin-terser';
+import { readdir, rm } from 'fs/promises';
+import terser from '@rollup/plugin-terser';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 
-import { name } from './package.json';
+import pkg from './package.json' assert { type: "json" };
 
 const config = {
-  name,
+  name: pkg.name,
   srcPath: 'src',
   srcFiles: ['main.js'],
   distPath: 'dist',
@@ -39,14 +39,11 @@ const createRollupConfig = ({ shouldMinify, es5 }) => ({
 });
 
 export default async () => {
-  // ensure that the output path exists
-  await ensureDir(config.distPath);
-
   // empty the output folder, except for README
   await Promise.all(
     (await readdir(config.distPath))
       .filter((fileName) => fileName !== 'README.md')
-      .map((fileName) => remove(join(config.distPath, fileName))),
+      .map((fileName) => rm(join(config.distPath, fileName), { recursive: true })),
   );
 
   // generate and run an array of rollup configs
